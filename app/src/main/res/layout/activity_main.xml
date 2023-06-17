@@ -37,4 +37,20 @@
         app:layout_constraintBottom_toBottomOf="@+id/btn_live"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btn_record"/>
+
+    <Button
+        android:id="@+id/black_mode_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Black_mode"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="269dp"
+        tools:layout_editor_absoluteY="620dp" />
+
+    <View
+        android:id="@+id/black_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:visibility="gone" />
 </androidx.constraintlayout.widget.ConstraintLayout>

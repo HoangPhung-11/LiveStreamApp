@@ -2,15 +2,21 @@ package com.example.livestreamapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+
+import io.agora.rtc.internal.DeviceUtils;
 
 public class StartingScreen1 extends AppCompatActivity {
 
@@ -59,6 +65,15 @@ public class StartingScreen1 extends AppCompatActivity {
 
         //Init submit button
         Button submit_button = findViewById(R.id.submit_button);
+        Button device_button = findViewById(R.id.takeDeviceId);
+        String deviceId = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
+
+        device_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("msg", deviceId);
+            }
+        });
 
         //Set up onclick function
         submit_button.setOnClickListener(new View.OnClickListener() {
@@ -66,8 +81,9 @@ public class StartingScreen1 extends AppCompatActivity {
             public void onClick(View v) {
                 //Take the url
                 EditText user_url = (EditText) findViewById(R.id.user_url);
-                String url = user_url.getText().toString();
-
+                String url = "rtsp://" + user_url.getText().toString() + ":8554" + "/" + deviceId;
+                //String url = user_url.getText().toString();
+                Log.d("msg", url);
                 //Store user url into recent url list
                 spinnerAdapter.add(url);
                 spinnerAdapter.notifyDataSetChanged();

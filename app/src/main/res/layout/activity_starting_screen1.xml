@@ -10,11 +10,12 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:text="Enter URL live stream"
+        android:text="Enter server IP"
         android:textSize="25dp"
         android:layout_alignParentTop="true"
         android:layout_marginTop="40dp"
         tools:context=".FrmActivity" />
+
 
 
     <EditText
@@ -32,6 +33,7 @@
         <requestFocus />
     </EditText>
 
+
     <Button
         android:id="@+id/submit_button"
         android:layout_width="wrap_content"
@@ -43,6 +45,13 @@
         android:background="#0099FF"
         android:text="Submit"
         android:textColor="#FFFFFF"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/takeDeviceId"
+        android:text="Take device id"
+        ></Button>
 
     <TextView
         android:id="@+id/url_history_text"

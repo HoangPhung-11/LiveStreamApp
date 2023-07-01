@@ -1,6 +1,15 @@
 package com.example.livestreamapp;
 
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -32,12 +41,12 @@ import android.os.Build;
 public class MainActivity extends AppCompatActivity implements ConnectCheckerRtsp, SurfaceHolder.Callback {
     //Set up live stream
     public static String URL_LIVE_STREAM = "";
-    public static final String STREAM_NAME = "f73a79fd";
+    //public static final String STREAM_NAME = "f73a79fd";
     public static final String PREFIX_FILE_PATH = "/demo_live_stream";
     public static final int RETRY_COUNT = 10;
 
     //Camera
-    private RtspCamera1 rtspCamera;
+    private static RtspCamera1 rtspCamera;
 
     //Saving Destination
     File filePath = new File(Environment.getExternalStorageDirectory().getAbsolutePath().concat(PREFIX_FILE_PATH));
@@ -53,11 +62,13 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
             "android.permission.BLUETOOTH"
     };
 
+
+
     /**  Start of check permission functions **/
 
     private boolean hasPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            //RUn in background
+            //Run in background
             Intent intent = new Intent();
             String packageName = getPackageName();
             PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
@@ -78,11 +89,23 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
 
     /** End of check permission **/
 
+    private JobScheduler jobScheduler;
+    private static final int JOB_ID = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
+        // Initialize the JobScheduler
+        jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+
+        // Schedule the job to start and stop the stream based on the internet connection
+        JobInfo.Builder jobBuilder = new JobInfo.Builder(JOB_ID, new ComponentName(this, StreamJobService.class));
+        jobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
+        jobBuilder.setPersisted(true);
+        jobScheduler.schedule(jobBuilder.build());
 
         //Take the url
         URL_LIVE_STREAM = getIntent().getStringExtra("URL_LIVE_STREAM");
@@ -110,7 +133,8 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
                 if (rtspCamera.isStreaming()) {
                     btn_live.setText("start_live");
                     rtspCamera.stopStream();
-                } else {
+                }
+                else {
                     if (rtspCamera.isRecording() || (rtspCamera.prepareAudio() && rtspCamera.prepareVideo())) {
                         btn_live.setText("stop_live");
                         rtspCamera.startStream(URL_LIVE_STREAM);
@@ -123,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
                 }
             }
         });
+
 
         btn_switch_camera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -191,16 +216,23 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
         });
 
 
+    }
+
+
+    public static void startStream() {
+        if (!rtspCamera.isStreaming()) {
+            if (rtspCamera.prepareAudio() && rtspCamera.prepareVideo()) {
+                rtspCamera.startStream(URL_LIVE_STREAM);
+            }
         }
-        /**
-        @Override
-        protected void onDestroy() {
-        super.onDestroy();
-        rtspCamera.stopStream();
-        rtspCamera.stopRecord();
-        rtspCamera.stopPreview();
+    }
+
+    public static void stopStream() {
+        if (rtspCamera.isStreaming()) {
+            rtspCamera.stopStream();
         }
-        **/
+    }
+
     @Override
     public void onConnectionSuccessRtsp() {
 
@@ -228,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
-
+        rtspCamera.startPreview();
     }
 
     @Override
@@ -245,4 +277,5 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
     public void onNewBitrateRtsp(long l) {
 
     }
+
 }

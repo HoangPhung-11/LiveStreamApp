@@ -26,7 +26,8 @@
         android:layout_marginBottom="-102dp"
         android:background="#CCCCCC"
         android:ems="10"
-        android:inputType="text">
+        android:inputType="text"
+        android:textColor="#000000">
 
         <requestFocus />
     </EditText>
@@ -41,6 +42,30 @@
         android:layout_marginTop="152dp"
         android:background="#0099FF"
         android:text="Submit"
-        android:textColor="#FFFFFF" />
+        android:textColor="#FFFFFF"/>
+
+    <TextView
+        android:id="@+id/url_history_text"
+        android:layout_below="@id/submit_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Recent URL"
+        android:textSize="20dp"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        ></TextView>
+
+    <Spinner
+        android:id="@+id/history_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/url_history_text"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:spinnerMode="dropdown"
+        >
+
+    </Spinner>
+
 
 </RelativeLayout>

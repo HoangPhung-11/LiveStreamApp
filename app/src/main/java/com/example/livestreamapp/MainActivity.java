@@ -14,6 +14,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 //import android.support.annotation.NonNull;
+import android.os.Handler;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -92,6 +94,11 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
     private JobScheduler jobScheduler;
     private static final int JOB_ID = 1;
 
+    /** Automatically check internet connection init **/
+    private static final int JOB_INTERVAL = 100000; // 20 seconds
+    private Handler handler;
+    private Runnable jobRunnable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,11 +108,24 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
         // Initialize the JobScheduler
         jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
-        // Schedule the job to start and stop the stream based on the internet connection
-        JobInfo.Builder jobBuilder = new JobInfo.Builder(JOB_ID, new ComponentName(this, StreamJobService.class));
-        jobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-        jobBuilder.setPersisted(true);
-        jobScheduler.schedule(jobBuilder.build());
+
+        // Initialize the Handler and Runnable
+        handler = new Handler();
+        jobRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Schedule the job every 5 seconds
+                // Schedule the job to check in StreamJobService
+                JobInfo.Builder jobBuilder = new JobInfo.Builder(JOB_ID, new ComponentName(MainActivity.this, StreamJobService.class));
+                jobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_NONE);
+                jobBuilder.setPersisted(true);
+                jobScheduler.schedule(jobBuilder.build());
+                Log.d("Tag", "Hello Word");
+                handler.postDelayed(this, JOB_INTERVAL);
+            }
+        };
+
+        handler.postDelayed(jobRunnable, JOB_INTERVAL);
 
         //Take the url
         URL_LIVE_STREAM = getIntent().getStringExtra("URL_LIVE_STREAM");
@@ -138,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
                     if (rtspCamera.isRecording() || (rtspCamera.prepareAudio() && rtspCamera.prepareVideo())) {
                         btn_live.setText("stop_live");
                         rtspCamera.startStream(URL_LIVE_STREAM);
+
                     } else {
                         Toast.makeText(
                                 MainActivity.this, "Error preparing stream, This device can't do it",
@@ -163,74 +184,28 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
         btn_record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!rtspCamera.isRecording()) {
-                    try {
-                        if (!filePath.exists()) {
-                        filePath.mkdir();
-                        }
-                        currentMillis = String.valueOf(System.currentTimeMillis());
-                        if (!rtspCamera.isStreaming()) {
-                            if (rtspCamera.prepareAudio() && rtspCamera.prepareVideo()) {
-                                rtspCamera.startRecord(
-                                filePath.getAbsolutePath()
-                                + "/"
-                                + currentMillis
-                                + ".mp4"
-                                );
-                                btn_record.setText("stop_record_video");
-                                Toast.makeText(MainActivity.this, "Recording... ", Toast.LENGTH_SHORT)
-                                .show();
-                            } else {
-                                Toast.makeText(
-                                MainActivity.this,
-                                "Error preparing stream, This device can't do it",
-                                Toast.LENGTH_SHORT
-                                ).show();
-                            }
-                        } else {
-                            rtspCamera.startRecord(
-                            filePath.getAbsolutePath()
-                                + "/"
-                                + currentMillis
-                                + ".mp4"
-                            );
-                            btn_record.setText("stop_record_video");
-                            Toast.makeText(MainActivity.this, "Recording... ", Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (IOException e) {
-                        rtspCamera.stopRecord();
-                        btn_record.setText("start_record_video");
-                        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    rtspCamera.stopRecord();
-                    btn_record.setText("start_record_video");
-                    Toast.makeText(
-                    MainActivity.this, ("file "
-                        + currentMillis
-                        + ".mp4 saved in "
-                        + filePath.getAbsolutePath()), Toast.LENGTH_SHORT
-                    ).show();
-                }
+                rtspCamera.reConnect(5000);
             }
         });
 
 
     }
 
-
+    //Start stream function
     public static void startStream() {
-        if (!rtspCamera.isStreaming()) {
-            if (rtspCamera.prepareAudio() && rtspCamera.prepareVideo()) {
+        if(!rtspCamera.isStreaming()){
+            //if (rtspCamera.prepareAudio() && rtspCamera.prepareVideo()) {
                 rtspCamera.startStream(URL_LIVE_STREAM);
-            }
+            //}
+        }
+        else {
+            String status = String.valueOf(rtspCamera.isStreaming());
+            Log.d("msg", status);
         }
     }
 
     public static void stopStream() {
-        if (rtspCamera.isStreaming()) {
-            rtspCamera.stopStream();
-        }
+        rtspCamera.stopStream();
     }
 
     @Override
@@ -261,11 +236,12 @@ public class MainActivity extends AppCompatActivity implements ConnectCheckerRts
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
         rtspCamera.startPreview();
+        rtspCamera.startPreview();
     }
 
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-        rtspCamera.startPreview();
+
     }
 
     @Override

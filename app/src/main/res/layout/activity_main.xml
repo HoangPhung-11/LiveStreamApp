@@ -22,7 +22,7 @@
     <Button android:id="@+id/btn_record"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="start_record_video"
+        android:text="re-stream"
         android:layout_marginStart="8dp"
         app:layout_constraintTop_toTopOf="@+id/btn_live"
         app:layout_constraintBottom_toBottomOf="@+id/btn_live"
